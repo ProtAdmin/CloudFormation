@@ -1,0 +1,106 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Description: "InternalITSystem-user-pool の構成テンプレート（ドメイン設定＋Retain付き）"
+
+Resources:
+  InternalITSystemUserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    Properties:
+      UserPoolName: InternalITSystem-user-pool_test
+      UsernameAttributes:
+        - email
+      AutoVerifiedAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          TemporaryPasswordValidityDays: 7
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+        - Name: custom:userID
+          AttributeDataType: String
+          Mutable: true
+          StringAttributeConstraints:
+            MinLength: "0"
+            MaxLength: "2048"
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+
+  InternalITSystemUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    DeletionPolicy: Retain
+    Properties:
+      ClientName: InternalITSystem-user-pool
+      UserPoolId: !Ref InternalITSystemUserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      AccessTokenValidity: 60
+      IdTokenValidity: 60
+      RefreshTokenValidity: 1
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+      CallbackURLs:
+        - https://d1xj20n18wdq9y.cloudfront.net
+        - https://d2f1z4tvqap875.cloudfront.net
+      LogoutURLs:
+        - https://d1xj20n18wdq9y.cloudfront.net
+        - https://d2f1z4tvqap875.cloudfront.net
+      SupportedIdentityProviders:
+        - COGNITO
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      AllowedOAuthFlowsUserPoolClient: true
+
+  InternalITSystemUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    DeletionPolicy: Retain
+    Properties:
+      Domain: internalitsystem-1h2ira36fx
+      UserPoolId: !Ref InternalITSystemUserPool
+
+  ProtoAdminGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    DeletionPolicy: Retain
+    Properties:
+      GroupName: Proto-Admin-Group
+      UserPoolId: !Ref InternalITSystemUserPool
+      Description: "システム全体の管理権限を持つグループ"
+      Precedence: 1
+
+  ProtoDevGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    DeletionPolicy: Retain
+    Properties:
+      GroupName: Proto-Dev-Group
+      UserPoolId: !Ref InternalITSystemUserPool
+      Description: "アプリケーション開発・テスト用グループ"
+      Precedence: 2
+
+  ProtoUserGroup:
+    Type: AWS::Cognito::UserPoolGroup
+    DeletionPolicy: Retain
+    Properties:
+      GroupName: Proto-User-Group
+      UserPoolId: !Ref InternalITSystemUserPool
+      Description: "データ閲覧のみ用グループ"
+      Precedence: 3

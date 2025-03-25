@@ -75,7 +75,7 @@ Resources:
     Type: AWS::Cognito::UserPoolDomain
     DeletionPolicy: Retain
     Properties:
-      Domain: internalitsystem-1h2ira36fx
+      Domain: internalitsystem-1h2ira36fy
       UserPoolId: !Ref InternalITSystemUserPool
 
   ProtoAdminGroup:
